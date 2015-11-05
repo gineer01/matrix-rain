@@ -18,7 +18,7 @@ MAX_RAIN_COUNT = 10
 def get_matrix_code_chars():
     l = [chr(i) for i in range(0x21, 0x7E)]
     # half-width katakana. See https://en.wikipedia.org/wiki/Halfwidth_and_fullwidth_forms
-    l.extend([chr(i) for i in range(0xFF65, 0xFFBE)])
+    l.extend([chr(i) for i in range(0xFF66, 0xFF9D)])
     return l
 
 MATRIX_CODE_CHARS = get_matrix_code_chars()
@@ -96,7 +96,7 @@ def config(stdscr):
 
 def add_rain(rains, stdscr):
     if len(rains) < MAX_RAIN_COUNT:
-        rains.append(animate_rain(stdscr, random.randrange(curses.COLS - 2)))
+        rains.append(animate_rain(stdscr, random.randrange(curses.COLS - 1)))
 
 
 curses.wrapper(main)
