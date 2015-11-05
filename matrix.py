@@ -39,20 +39,20 @@ def animate_rain(stdscr, x):
             break
 
         for i in range(tail, min(middle, curses.LINES)):
-            stdscr.addstr(i, x, random_char())
+            stdscr.addstr(i, x, random_char(), curses.color_pair(1))
 
         for i in range(middle, min(head, curses.LINES)):
-            stdscr.addstr(i, x, random_char(), curses.A_REVERSE)
+            stdscr.addstr(i, x, random_char(), curses.color_pair(1) | curses.A_BOLD)
 
         if (head < curses.LINES - 1):
-            stdscr.addstr(head, x, random_char())
+            stdscr.addstr(head, x, random_char(), curses.color_pair(1) | curses.A_STANDOUT | curses.A_BLINK)
 
         head = head + FALLING_SPEED
         yield
 
 
 def main(stdscr):
-    stdscr.addstr(0, 0, "Press enter to start. Press SPACE to stop.")
+    stdscr.addstr(0, 0, "Press any key to start. Press any key (except SPACE) to stop.")
     ch = stdscr.getch() #Wait for user to press something before starting
     config(stdscr)
 
@@ -74,7 +74,7 @@ def main(stdscr):
         # stdscr.addstr(0, 0, "Key pressed: {}".format(ch))
 
         ch = stdscr.getch()
-        if ch == ord(' '):
+        if ch != curses.ERR and ch != ord(' '): #Use space to proceed animation if nodelay is False
             break
 
         time.sleep(SLEEP_BETWEEN_FRAME)
@@ -83,6 +83,7 @@ def main(stdscr):
 def config(stdscr):
     curses.curs_set(0)
     stdscr.nodelay(True)
+    curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_BLACK)
     global MAX_RAIN_COUNT
     MAX_RAIN_COUNT = curses.COLS//2
 
