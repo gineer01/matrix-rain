@@ -33,7 +33,7 @@ def animate_rain(stdscr, x):
         for i in range(middle, min(head - 1, curses.LINES)):
             stdscr.addstr(i, x, random_char(), curses.A_REVERSE)
 
-        if (head < curses.LINES):
+        if (head < curses.LINES - 1):
             stdscr.addstr(head, x, random_char())
 
         head = head + 1
