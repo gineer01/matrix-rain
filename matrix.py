@@ -6,7 +6,7 @@ import time
 
 #Sleep between frame after refresh so that user can see the frame. Value 0.01 or lower results in flickering because the
 # animation is too fast.
-SLEEP_BETWEEN_FRAME = .05
+SLEEP_BETWEEN_FRAME = .04
 
 #How fast the rain should fall
 FALLING_SPEED = 1
@@ -15,13 +15,19 @@ FALLING_SPEED = 1
 MAX_RAIN_COUNT = 10
 
 
+def get_matrix_code_chars():
+    l = [chr(i) for i in range(0x21, 0x7E)]
+    # half-width katakana. See https://en.wikipedia.org/wiki/Halfwidth_and_fullwidth_forms
+    l.extend([chr(i) for i in range(0xFF65, 0xFFBE)])
+    return l
+
+MATRIX_CODE_CHARS = get_matrix_code_chars()
+
+def random_char():
+    return random.choice(MATRIX_CODE_CHARS)
 
 def random_rain_length():
     return random.randint(curses.LINES//2, 3*curses.LINES//2)
-
-def random_char():
-    # return chr(random.randint(0x4E00, 0x62FF))
-    return chr(random.randint(ord('A'), ord('z')))
 
 def animate_rain(stdscr, x):
     max_length = random_rain_length()
@@ -85,7 +91,7 @@ def config(stdscr):
     stdscr.nodelay(True)
     curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_BLACK)
     global MAX_RAIN_COUNT
-    MAX_RAIN_COUNT = curses.COLS//2
+    MAX_RAIN_COUNT = curses.COLS//3
 
 
 def add_rain(rains, stdscr):
