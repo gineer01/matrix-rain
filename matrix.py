@@ -6,10 +6,15 @@ import time
 
 #Sleep between frame after refresh so that user can see the frame. Value 0.01 or lower results in flickering because the
 # animation is too fast.
-SLEEP_BETWEEN_FRAME = .03
+SLEEP_BETWEEN_FRAME = .05
 
 #How fast the rain should fall
 FALLING_SPEED = 2
+
+#The max number of falling rains
+MAX_RAIN_COUNT = 10
+
+
 
 def random_rain_length():
     return random.randint(curses.LINES, 3*curses.LINES//2)
@@ -36,7 +41,7 @@ def animate_rain(stdscr, x):
         for i in range(tail, min(middle, curses.LINES)):
             stdscr.addstr(i, x, random_char())
 
-        for i in range(middle, min(head - 1, curses.LINES)):
+        for i in range(middle, min(head, curses.LINES)):
             stdscr.addstr(i, x, random_char(), curses.A_REVERSE)
 
         if (head < curses.LINES - 1):
@@ -47,13 +52,15 @@ def animate_rain(stdscr, x):
 
 
 def main(stdscr):
-    # Clear screen
-    curses.curs_set(0)
-    stdscr.clear()
+    stdscr.addstr(0, 0, "Press enter to start. Press SPACE to stop.")
+    ch = stdscr.getch() #Wait for user to press something before starting
+    config(stdscr)
 
-    stdscr.nodelay(True)
-    rains = [animate_rain(stdscr, random.randrange(curses.COLS - 2)) for i in range(curses.COLS//2)]
+    rains = []
+
     while True:
+        add_rain(rains, stdscr)
+
         stdscr.clear()
         for r in rains:
             try:
@@ -61,15 +68,28 @@ def main(stdscr):
             except StopIteration:
                 rains.remove(r)
 
-        stdscr.refresh()
+        # getch() already includes refresh()
+        # stdscr.refresh()
+        # debugging info
+        # stdscr.addstr(0, 0, "Key pressed: {}".format(ch))
 
-
-
-        # ch = stdscr.getch()
-        # if (ch == curses.KEY_ENTER):
-        #     break
-        if not rains:
+        ch = stdscr.getch()
+        if ch == ord(' '):
             break
+
         time.sleep(SLEEP_BETWEEN_FRAME)
+
+
+def config(stdscr):
+    curses.curs_set(0)
+    stdscr.nodelay(True)
+    global MAX_RAIN_COUNT
+    MAX_RAIN_COUNT = curses.COLS//2
+
+
+def add_rain(rains, stdscr):
+    if len(rains) < MAX_RAIN_COUNT:
+        rains.append(animate_rain(stdscr, random.randrange(curses.COLS - 2)))
+
 
 curses.wrapper(main)
