@@ -9,7 +9,7 @@ import time
 SLEEP_BETWEEN_FRAME = .05
 
 #How fast the rain should fall
-FALLING_SPEED = 2
+FALLING_SPEED = 1
 
 #The max number of falling rains
 MAX_RAIN_COUNT = 10
@@ -17,7 +17,7 @@ MAX_RAIN_COUNT = 10
 
 
 def random_rain_length():
-    return random.randint(curses.LINES, 3*curses.LINES//2)
+    return random.randint(curses.LINES//2, 3*curses.LINES//2)
 
 def random_char():
     # return chr(random.randint(0x4E00, 0x62FF))
@@ -45,7 +45,7 @@ def animate_rain(stdscr, x):
             stdscr.addstr(i, x, random_char(), curses.color_pair(1) | curses.A_BOLD)
 
         if (head < curses.LINES - 1):
-            stdscr.addstr(head, x, random_char(), curses.color_pair(1) | curses.A_STANDOUT | curses.A_BLINK)
+            stdscr.addstr(head, x, random_char(), curses.color_pair(0) | curses.A_STANDOUT | curses.A_BLINK)
 
         head = head + FALLING_SPEED
         yield
