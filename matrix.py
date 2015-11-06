@@ -14,6 +14,10 @@ FALLING_SPEED = 1
 #The max number of falling rains
 MAX_RAIN_COUNT = 10
 
+#Color gradient for rain
+COLOR_STEP = 20
+START_COLOR_NUM = 10 #The starting number for color in gradient to avoid changing the first 8 basic colors
+NUMBER_OF_COLOR = 40
 
 def get_matrix_code_chars():
     l = [chr(i) for i in range(0x21, 0x7E)]
@@ -44,17 +48,32 @@ def animate_rain(stdscr, x):
         if (tail >= curses.LINES):
             break
 
-        for i in range(tail, min(middle, curses.LINES)):
-            stdscr.addstr(i, x, random_char(), curses.color_pair(1))
-
-        for i in range(middle, min(head, curses.LINES)):
-            stdscr.addstr(i, x, random_char(), curses.color_pair(1) | curses.A_BOLD)
+        show_body(stdscr, head, middle, tail, x)
 
         if (head < curses.LINES - 1):
             stdscr.addstr(head, x, random_char(), curses.color_pair(0) | curses.A_STANDOUT | curses.A_BLINK)
 
         head = head + FALLING_SPEED
         yield
+
+
+def show_body(stdscr, head, middle, tail, x):
+    if curses.can_change_color():
+        for i in range(tail, min(head, curses.LINES)):
+            stdscr.addstr(i, x, random_char(), get_color(i, head, tail))
+    else:
+        for i in range(tail, min(middle, curses.LINES)):
+            stdscr.addstr(i, x, random_char(), curses.color_pair(1))
+        for i in range(middle, min(head, curses.LINES)):
+            stdscr.addstr(i, x, random_char(), curses.color_pair(1) | curses.A_BOLD)
+
+
+def get_color(i, head, tail):
+    # return curses.color_pair(11 + NUMBER_OF_COLOR * i // (head - tail))
+    color_num = NUMBER_OF_COLOR - (head - i) + 1
+    if color_num < 0:
+        color_num = 0
+    return curses.color_pair(START_COLOR_NUM + color_num)
 
 
 def main(stdscr):
@@ -89,7 +108,14 @@ def main(stdscr):
 def config(stdscr):
     curses.curs_set(0)
     stdscr.nodelay(True)
-    curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_BLACK)
+    if curses.can_change_color():#use xterm-256 if this is false
+        curses.init_color(curses.COLOR_WHITE, 1000, 1000, 1000)
+        for i in range(NUMBER_OF_COLOR + 1):
+            green_value = (1000 - COLOR_STEP * NUMBER_OF_COLOR) + COLOR_STEP * i
+            curses.init_color(START_COLOR_NUM + i, 0, green_value, 0)
+            curses.init_pair(START_COLOR_NUM + i, START_COLOR_NUM + i, curses.COLOR_BLACK)
+    else:
+        curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_BLACK)
     global MAX_RAIN_COUNT
     MAX_RAIN_COUNT = curses.COLS//3
 
