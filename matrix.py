@@ -1,4 +1,4 @@
-__author__ = 'cdong'
+#!/usr/bin/env python3
 
 import random
 import curses
@@ -11,13 +11,13 @@ SLEEP_BETWEEN_FRAME = .04
 #How fast the rain should fall
 FALLING_SPEED = 1
 
-#The max number of falling rains
+#The max number of falling rains. In config, we set it to curses.COLS//3
 MAX_RAIN_COUNT = 10
 
 #Color gradient for rain
 COLOR_STEP = 20
 START_COLOR_NUM = 10 #The starting number for color in gradient to avoid changing the first 8 basic colors
-NUMBER_OF_COLOR = 40
+NUMBER_OF_COLOR = 45
 
 def get_matrix_code_chars():
     l = [chr(i) for i in range(0x21, 0x7E)]
@@ -38,12 +38,13 @@ def animate_rain(stdscr, x):
     head = 1
 
     while True:
-        tail = head - max_length
-        if (tail < 0):
-            tail = 0
         middle = head - max_length//2
         if (middle < 0):
             middle = 0
+
+        tail = head - max_length
+        if (tail < 0):
+            tail = 0
 
         if (tail >= curses.LINES):
             break
@@ -59,6 +60,7 @@ def animate_rain(stdscr, x):
 
 def show_body(stdscr, head, middle, tail, x):
     if curses.can_change_color():
+        #do gradient
         for i in range(tail, min(head, curses.LINES)):
             stdscr.addstr(i, x, random_char(), get_color(i, head, tail))
     else:
@@ -69,7 +71,6 @@ def show_body(stdscr, head, middle, tail, x):
 
 
 def get_color(i, head, tail):
-    # return curses.color_pair(11 + NUMBER_OF_COLOR * i // (head - tail))
     color_num = NUMBER_OF_COLOR - (head - i) + 1
     if color_num < 0:
         color_num = 0
@@ -93,11 +94,6 @@ def main(stdscr):
             except StopIteration:
                 rains.remove(r)
 
-        # getch() already includes refresh()
-        # stdscr.refresh()
-        # debugging info
-        # stdscr.addstr(0, 0, "Key pressed: {}".format(ch))
-
         ch = stdscr.getch()
         if ch != curses.ERR and ch != ord(' '): #Use space to proceed animation if nodelay is False
             break
@@ -108,6 +104,7 @@ def main(stdscr):
 def config(stdscr):
     curses.curs_set(0)
     stdscr.nodelay(True)
+
     if curses.can_change_color():#use xterm-256 if this is false
         curses.init_color(curses.COLOR_WHITE, 1000, 1000, 1000)
         for i in range(NUMBER_OF_COLOR + 1):
@@ -116,6 +113,7 @@ def config(stdscr):
             curses.init_pair(START_COLOR_NUM + i, START_COLOR_NUM + i, curses.COLOR_BLACK)
     else:
         curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_BLACK)
+
     global MAX_RAIN_COUNT
     MAX_RAIN_COUNT = curses.COLS//3
 
