@@ -9,15 +9,16 @@ import time
 SLEEP_BETWEEN_FRAME = .04
 
 #How fast the rain should fall
-FALLING_SPEED = 1
+FALLING_SPEED = 2
 
 #The max number of falling rains. In config, we set it to curses.COLS//3
 MAX_RAIN_COUNT = 10
 
 #Color gradient for rain
 COLOR_STEP = 20
-START_COLOR_NUM = 10 #The starting number for color in gradient to avoid changing the first 8 basic colors
-NUMBER_OF_COLOR = 45
+START_COLOR_NUM = 128 #The starting number for color in gradient to avoid changing the first 16 basic colors
+NUMBER_OF_COLOR = 40
+USE_GRADIENT = False
 
 def get_matrix_code_chars():
     l = [chr(i) for i in range(0x21, 0x7E)]
@@ -31,13 +32,13 @@ def random_char():
     return random.choice(MATRIX_CODE_CHARS)
 
 def random_rain_length():
-    return random.randint(curses.LINES//2, 3*curses.LINES//2)
+    return random.randint(curses.LINES//2, curses.LINES)
 
 def animate_rain(stdscr, x):
     max_length = random_rain_length()
-    head = 1
+    head, middle, tail = 0,0,0
 
-    while True:
+    while tail < curses.LINES:
         middle = head - max_length//2
         if (middle < 0):
             middle = 0
@@ -46,21 +47,21 @@ def animate_rain(stdscr, x):
         if (tail < 0):
             tail = 0
 
-        if (tail >= curses.LINES):
-            break
-
         show_body(stdscr, head, middle, tail, x)
 
-        if (head < curses.LINES - 1):
-            stdscr.addstr(head, x, random_char(), curses.color_pair(0) | curses.A_STANDOUT | curses.A_BLINK)
+        show_head(stdscr, head, x)
 
         head = head + FALLING_SPEED
         yield
 
 
+def show_head(stdscr, head, x):
+    if head < curses.LINES:
+        stdscr.addstr(head, x, random_char(), curses.color_pair(0) | curses.A_STANDOUT)
+
+
 def show_body(stdscr, head, middle, tail, x):
-    if curses.can_change_color():
-        #do gradient
+    if USE_GRADIENT:
         for i in range(tail, min(head, curses.LINES)):
             stdscr.addstr(i, x, random_char(), get_color(i, head, tail))
     else:
@@ -105,7 +106,18 @@ def config(stdscr):
     curses.curs_set(0)
     stdscr.nodelay(True)
 
-    if curses.can_change_color():#use xterm-256 if this is false
+    init_colors()
+
+    global MAX_RAIN_COUNT
+    MAX_RAIN_COUNT = curses.COLS//3
+
+
+def init_colors():
+    curses.start_color()
+    global USE_GRADIENT
+    USE_GRADIENT = curses.can_change_color()  # use xterm-256 if this is false
+
+    if USE_GRADIENT:
         curses.init_color(curses.COLOR_WHITE, 1000, 1000, 1000)
         for i in range(NUMBER_OF_COLOR + 1):
             green_value = (1000 - COLOR_STEP * NUMBER_OF_COLOR) + COLOR_STEP * i
@@ -114,13 +126,10 @@ def config(stdscr):
     else:
         curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_BLACK)
 
-    global MAX_RAIN_COUNT
-    MAX_RAIN_COUNT = curses.COLS//3
-
 
 def add_rain(rains, stdscr):
     if len(rains) < MAX_RAIN_COUNT:
         rains.append(animate_rain(stdscr, random.randrange(curses.COLS - 1)))
 
-
-curses.wrapper(main)
+if __name__ == "__main__":
+    curses.wrapper(main)
