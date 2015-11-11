@@ -35,15 +35,16 @@ def random_char():
 def random_rain_length():
     return random.randint(curses.LINES//2, curses.LINES)
 
-def rain(stdscr, pool):
+async def rain(stdscr, pool):
     while True:
         x = random.choice(pool)
         pool.remove(x)
         max_length = random_rain_length()
         speed = random.randint(1, FALLING_SPEED)
-        yield from animate_rain(stdscr, x, max_length, speed)
+        await animate_rain(stdscr, x, max_length, speed)
         pool.append(x)
 
+@types.coroutine
 def animate_rain(stdscr, x, max_length, speed=FALLING_SPEED):
     head, middle, tail = 0,0,0
 
@@ -100,7 +101,7 @@ def main(stdscr):
 
         stdscr.clear()
         for r in rains:
-            next(r)
+            r.send(None)
 
         ch = stdscr.getch()
         if ch != curses.ERR and ch != ord(' '): #Use space to proceed animation if nodelay is False
