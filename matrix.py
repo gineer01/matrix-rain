@@ -35,14 +35,15 @@ def random_char():
 def random_rain_length():
     return random.randint(curses.LINES//2, curses.LINES)
 
-def rain(stdscr):
+def rain(stdscr, pool):
     while True:
-        x = random.randrange(curses.COLS - 1)
+        x = random.choice(pool)
+        pool.remove(x)
         max_length = random_rain_length()
         speed = random.randint(1, FALLING_SPEED)
         yield from animate_rain(stdscr, x, max_length, speed)
+        pool.append(x)
 
-@types.coroutine
 def animate_rain(stdscr, x, max_length, speed=FALLING_SPEED):
     head, middle, tail = 0,0,0
 
@@ -92,9 +93,10 @@ def main(stdscr):
     config(stdscr)
 
     rains = []
+    pool = list(range(curses.COLS - 1))
 
     while True:
-        add_rain(rains, stdscr)
+        add_rain(rains, stdscr, pool)
 
         stdscr.clear()
         for r in rains:
@@ -132,9 +134,9 @@ def init_colors():
         curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_BLACK)
 
 
-def add_rain(rains, stdscr):
-    if len(rains) < MAX_RAIN_COUNT:
-        rains.append(rain(stdscr))
+def add_rain(rains, stdscr, pool):
+    if (len(rains) < MAX_RAIN_COUNT) and (len(pool) > 0):
+        rains.append(rain(stdscr, pool))
 
 if __name__ == "__main__":
     curses.wrapper(main)
