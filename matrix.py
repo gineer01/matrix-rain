@@ -3,6 +3,7 @@
 import random
 import curses
 import time
+import types
 
 #Sleep between frame after refresh so that user can see the frame. Value 0.01 or lower results in flickering because the
 # animation is too fast.
@@ -34,8 +35,15 @@ def random_char():
 def random_rain_length():
     return random.randint(curses.LINES//2, curses.LINES)
 
-def animate_rain(stdscr, x):
-    max_length = random_rain_length()
+def rain(stdscr):
+    while True:
+        x = random.randrange(curses.COLS - 1)
+        max_length = random_rain_length()
+        speed = random.randint(1, FALLING_SPEED)
+        yield from animate_rain(stdscr, x, max_length, speed)
+
+@types.coroutine
+def animate_rain(stdscr, x, max_length, speed=FALLING_SPEED):
     head, middle, tail = 0,0,0
 
     while tail < curses.LINES:
@@ -51,7 +59,7 @@ def animate_rain(stdscr, x):
 
         show_head(stdscr, head, x)
 
-        head = head + FALLING_SPEED
+        head = head + speed
         yield
 
 
@@ -90,10 +98,7 @@ def main(stdscr):
 
         stdscr.clear()
         for r in rains:
-            try:
-                next(r)
-            except StopIteration:
-                rains.remove(r)
+            next(r)
 
         ch = stdscr.getch()
         if ch != curses.ERR and ch != ord(' '): #Use space to proceed animation if nodelay is False
@@ -129,7 +134,7 @@ def init_colors():
 
 def add_rain(rains, stdscr):
     if len(rains) < MAX_RAIN_COUNT:
-        rains.append(animate_rain(stdscr, random.randrange(curses.COLS - 1)))
+        rains.append(rain(stdscr))
 
 if __name__ == "__main__":
     curses.wrapper(main)
