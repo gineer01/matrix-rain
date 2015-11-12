@@ -5,6 +5,8 @@ import matrix
 
 line = 0
 def display_info(stdscr):
+    display_info_line(stdscr, "COLS: {}".format(curses.COLS))
+    display_info_line(stdscr, "LINES: {}".format(curses.LINES))
     display_info_line(stdscr, "Bold", curses.color_pair(0) | curses.A_BOLD)
     display_info_line(stdscr, "Blink", curses.A_BLINK)
     display_info_line(stdscr, "Blink + Standout", curses.A_BLINK | curses.A_STANDOUT)

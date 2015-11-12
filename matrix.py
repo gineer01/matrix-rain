@@ -3,16 +3,15 @@
 import random
 import curses
 import time
-import types
 
 #Sleep between frame after refresh so that user can see the frame. Value 0.01 or lower results in flickering because the
 # animation is too fast.
 SLEEP_BETWEEN_FRAME = .04
 
-#How fast the rain should fall
+#How fast the rain should fall. In config, we change it according to screen.
 FALLING_SPEED = 2
 
-#The max number of falling rains. In config, we set it to curses.COLS//3
+#The max number of falling rains. In config, we change it according to screen.
 MAX_RAIN_COUNT = 10
 
 #Color gradient for rain
@@ -20,6 +19,36 @@ COLOR_STEP = 20
 START_COLOR_NUM = 128 #The starting number for color in gradient to avoid changing the first 16 basic colors
 NUMBER_OF_COLOR = 40
 USE_GRADIENT = False
+
+
+#Reset the config value according to screen size
+def config(stdscr):
+    curses.curs_set(0)
+    stdscr.nodelay(True)
+
+    init_colors()
+
+    global MAX_RAIN_COUNT
+    MAX_RAIN_COUNT = curses.COLS//3
+
+    global FALLING_SPEED
+    FALLING_SPEED = 1 + curses.LINES//25
+
+
+def init_colors():
+    curses.start_color()
+    global USE_GRADIENT
+    USE_GRADIENT = curses.can_change_color()  # use xterm-256 if this is false
+
+    if USE_GRADIENT:
+        curses.init_color(curses.COLOR_WHITE, 1000, 1000, 1000)
+        for i in range(NUMBER_OF_COLOR + 1):
+            green_value = (1000 - COLOR_STEP * NUMBER_OF_COLOR) + COLOR_STEP * i
+            curses.init_color(START_COLOR_NUM + i, 0, green_value, 0)
+            curses.init_pair(START_COLOR_NUM + i, START_COLOR_NUM + i, curses.COLOR_BLACK)
+    else:
+        curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_BLACK)
+
 
 def get_matrix_code_chars():
     l = [chr(i) for i in range(0x21, 0x7E)]
@@ -107,32 +136,6 @@ def main(stdscr):
             break
 
         time.sleep(SLEEP_BETWEEN_FRAME)
-
-
-def config(stdscr):
-    curses.curs_set(0)
-    stdscr.nodelay(True)
-
-    init_colors()
-
-    global MAX_RAIN_COUNT
-    MAX_RAIN_COUNT = curses.COLS//3
-
-
-def init_colors():
-    curses.start_color()
-    global USE_GRADIENT
-    USE_GRADIENT = curses.can_change_color()  # use xterm-256 if this is false
-
-    if USE_GRADIENT:
-        curses.init_color(curses.COLOR_WHITE, 1000, 1000, 1000)
-        for i in range(NUMBER_OF_COLOR + 1):
-            green_value = (1000 - COLOR_STEP * NUMBER_OF_COLOR) + COLOR_STEP * i
-            curses.init_color(START_COLOR_NUM + i, 0, green_value, 0)
-            curses.init_pair(START_COLOR_NUM + i, START_COLOR_NUM + i, curses.COLOR_BLACK)
-    else:
-        curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_BLACK)
-
 
 def add_rain(rains, stdscr, pool):
     if (len(rains) < MAX_RAIN_COUNT) and (len(pool) > 0):
