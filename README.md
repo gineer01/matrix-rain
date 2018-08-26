@@ -1,6 +1,6 @@
 # matrix-rain
 
-Matrix code rain animation using curses in Python 3
+Matrix code rain animation using curses in Python 3 (works best with iTerm2).
 
 Screenshot:
 
