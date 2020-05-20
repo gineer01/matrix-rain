@@ -4,24 +4,24 @@ import random
 import curses
 import time
 
-#Sleep between frame after refresh so that user can see the frame. Value 0.01 or lower results in flickering because the
-# animation is too fast.
+# Sleep between frame after refresh so that user can see the frame. Value 0.01 or lower results in flickering because
+# the # animation is too fast.
 SLEEP_BETWEEN_FRAME = .04
 
-#How fast the rain should fall. In config, we change it according to screen.
+# How fast the rain should fall. In config, we change it according to screen.
 FALLING_SPEED = 2
 
-#The max number of falling rains. In config, we change it according to screen.
+# The max number of falling rains. In config, we change it according to screen.
 MAX_RAIN_COUNT = 10
 
-#Color gradient for rain
+# Color gradient for rain
 COLOR_STEP = 20
-START_COLOR_NUM = 128 #The starting number for color in gradient to avoid changing the first 16 basic colors
+START_COLOR_NUM = 128  # The starting number for color in gradient to avoid changing the first 16 basic colors
 NUMBER_OF_COLOR = 40
 USE_GRADIENT = False
 
 
-#Reset the config value according to screen size
+# Reset the config value according to screen size
 def config(stdscr):
     curses.curs_set(0)
     stdscr.nodelay(True)
@@ -56,13 +56,17 @@ def get_matrix_code_chars():
     l.extend([chr(i) for i in range(0xFF66, 0xFF9D)])
     return l
 
+
 MATRIX_CODE_CHARS = get_matrix_code_chars()
+
 
 def random_char():
     return random.choice(MATRIX_CODE_CHARS)
 
+
 def random_rain_length():
     return random.randint(curses.LINES//2, curses.LINES)
+
 
 def rain(stdscr, pool):
     while True:
@@ -73,8 +77,21 @@ def rain(stdscr, pool):
         yield from animate_rain(stdscr, x, max_length, speed)
         pool.append(x)
 
+
 def animate_rain(stdscr, x, max_length, speed=FALLING_SPEED):
-    head, middle, tail = 0,0,0
+    """
+    A rain consists of 3 parts: head, middle, and tail
+    Head: the white leading rain drop
+    Body: the fading trail
+    Tail: empty space behind the rain trail
+
+    :param stdscr: curses's screen object
+    :param x: the column of this rain on the screen
+    :param max_length: the length of this rain
+    :param speed: how fast a rain should fall (the number of lines it jumps each animation frame)
+    :return: None
+    """
+    head, middle, tail = 0, 0, 0
 
     while tail < curses.LINES:
         middle = head - max_length//2
@@ -82,8 +99,10 @@ def animate_rain(stdscr, x, max_length, speed=FALLING_SPEED):
             middle = 0
 
         tail = head - max_length
-        if (tail < 0):
+        if tail < 0:
             tail = 0
+        else:
+            show_tail(stdscr, tail, x)
 
         show_body(stdscr, head, middle, tail, x)
 
@@ -109,6 +128,11 @@ def show_body(stdscr, head, middle, tail, x):
             stdscr.addstr(i, x, random_char(), curses.color_pair(1) | curses.A_BOLD)
 
 
+def show_tail(stdscr, tail, x):
+    for i in range(0, min(tail, curses.LINES)):
+        stdscr.addstr(i, x, ' ', curses.color_pair(0))
+
+
 def get_color(i, head, tail):
     color_num = NUMBER_OF_COLOR - (head - i) + 1
     if color_num < 0:
@@ -118,7 +142,7 @@ def get_color(i, head, tail):
 
 def main(stdscr):
     stdscr.addstr(0, 0, "Press any key to start. Press any key (except SPACE) to stop.")
-    ch = stdscr.getch() #Wait for user to press something before starting
+    ch = stdscr.getch()  # Wait for user to press something before starting
     config(stdscr)
 
     rains = []
@@ -127,19 +151,20 @@ def main(stdscr):
     while True:
         add_rain(rains, stdscr, pool)
 
-        stdscr.clear()
         for r in rains:
             next(r)
 
         ch = stdscr.getch()
-        if ch != curses.ERR and ch != ord(' '): #Use space to proceed animation if nodelay is False
+        if ch != curses.ERR and ch != ord(' '):  # Use space to proceed animation if nodelay is False
             break
 
         time.sleep(SLEEP_BETWEEN_FRAME)
 
+
 def add_rain(rains, stdscr, pool):
     if (len(rains) < MAX_RAIN_COUNT) and (len(pool) > 0):
         rains.append(rain(stdscr, pool))
+
 
 if __name__ == "__main__":
     curses.wrapper(main)
