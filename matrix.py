@@ -5,7 +5,7 @@ import curses
 import time
 
 # Sleep between frame after refresh so that user can see the frame. Value 0.01 or lower results in flickering because
-# the # animation is too fast.
+# the animation is too fast.
 SLEEP_BETWEEN_FRAME = .04
 
 # How fast the rain should fall. In config, we change it according to screen.
@@ -29,7 +29,7 @@ def config(stdscr):
     init_colors()
 
     global MAX_RAIN_COUNT
-    MAX_RAIN_COUNT = curses.COLS//3
+    MAX_RAIN_COUNT = curses.COLS//2
 
     global FALLING_SPEED
     FALLING_SPEED = 1 + curses.LINES//25
@@ -80,7 +80,7 @@ def rain(stdscr, pool):
 
 def animate_rain(stdscr, x, max_length, speed=FALLING_SPEED):
     """
-    A rain consists of 3 parts: head, middle, and tail
+    A rain consists of 3 parts: head, body, and tail
     Head: the white leading rain drop
     Body: the fading trail
     Tail: empty space behind the rain trail
@@ -102,7 +102,7 @@ def animate_rain(stdscr, x, max_length, speed=FALLING_SPEED):
         if tail < 0:
             tail = 0
         else:
-            show_tail(stdscr, tail, x)
+            show_tail(stdscr, tail, x, speed)
 
         show_body(stdscr, head, middle, tail, x)
 
@@ -128,8 +128,8 @@ def show_body(stdscr, head, middle, tail, x):
             stdscr.addstr(i, x, random_char(), curses.color_pair(1) | curses.A_BOLD)
 
 
-def show_tail(stdscr, tail, x):
-    for i in range(0, min(tail, curses.LINES)):
+def show_tail(stdscr, tail, x, speed):
+    for i in range(max(0, tail - speed), min(tail, curses.LINES)):
         stdscr.addstr(i, x, ' ', curses.color_pair(0))
 
 
