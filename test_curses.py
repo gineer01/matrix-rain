@@ -35,8 +35,8 @@ def display_info(stdscr):
 
 
 def display_info_line(stdscr, info, attr=curses.A_NORMAL):
-    stdscr.addstr(line, 0, info, attr)
     global line
+    stdscr.addstr(line, 0, info, attr)
     line = line + 1
     if line == curses.LINES:
         stdscr.getch()
