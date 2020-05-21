@@ -6,7 +6,7 @@ import time
 
 # Sleep between frame after refresh so that user can see the frame. Value 0.01 or lower results in flickering because
 # the animation is too fast.
-SLEEP_BETWEEN_FRAME = .04
+SLEEP_BETWEEN_FRAME = .04  # about 25 frames/s is good enough
 
 # How fast the rain should fall. In config, we change it according to screen.
 FALLING_SPEED = 2
@@ -16,9 +16,17 @@ MAX_RAIN_COUNT = 10
 
 # Color gradient for rain
 COLOR_STEP = 20
-START_COLOR_NUM = 128  # The starting number for color in gradient to avoid changing the first 16 basic colors
-NUMBER_OF_COLOR = 40
+NUMBER_OF_COLOR = 50  # The darkest color is 1000 - COLOR_STEP * NUMBER_OF_COLOR. This should be >= 0
 USE_GRADIENT = False
+START_COLOR_NUM = 128  # The starting number for color in gradient to avoid changing the first 16 basic colors
+
+# Different styles for rain head
+HEAD_STANDOUT = curses.COLOR_WHITE | curses.A_STANDOUT  # look better for small font
+HEAD_BOLD = curses.COLOR_WHITE | curses.A_BOLD  # look better for larger font
+
+style = {
+    'head': HEAD_STANDOUT
+}
 
 
 # Reset the config value according to screen size
@@ -42,6 +50,7 @@ def init_colors():
 
     if USE_GRADIENT:
         curses.init_color(curses.COLOR_WHITE, 1000, 1000, 1000)
+        curses.init_color(curses.COLOR_BLACK, 0, 0, 0)  # make sure background is black
         for i in range(NUMBER_OF_COLOR + 1):
             green_value = (1000 - COLOR_STEP * NUMBER_OF_COLOR) + COLOR_STEP * i
             curses.init_color(START_COLOR_NUM + i, 0, green_value, 0)
@@ -114,7 +123,7 @@ def animate_rain(stdscr, x, max_length, speed=FALLING_SPEED):
 
 def show_head(stdscr, head, x):
     if head < curses.LINES:
-        stdscr.addstr(head, x, random_char(), curses.color_pair(0) | curses.A_STANDOUT)
+        stdscr.addstr(head, x, random_char(), style['head'])
 
 
 def show_body(stdscr, head, middle, tail, x):
@@ -140,8 +149,18 @@ def get_color(i, head, tail):
     return curses.color_pair(START_COLOR_NUM + color_num)
 
 
+def update_style():
+    '''
+    Cycle thru different styles
+    :return: None
+    '''
+    style['head'] =  HEAD_BOLD if style['head'] == HEAD_STANDOUT else HEAD_STANDOUT
+
+
 def main(stdscr):
     stdscr.addstr(0, 0, "Press any key to start. Press any key (except SPACE) to stop.")
+    stdscr.addstr(1, 0, "Press key 's' to try different styles.")
+    stdscr.addstr(curses.LINES//3, curses.COLS//4, "T H E   M A T R I X")
     ch = stdscr.getch()  # Wait for user to press something before starting
     config(stdscr)
 
@@ -156,7 +175,10 @@ def main(stdscr):
 
         ch = stdscr.getch()
         if ch != curses.ERR and ch != ord(' '):  # Use space to proceed animation if nodelay is False
-            break
+            if ch == ord('s'):
+                update_style()
+            else:
+                break  # exit
 
         time.sleep(SLEEP_BETWEEN_FRAME)
 

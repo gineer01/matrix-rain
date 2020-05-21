@@ -26,7 +26,7 @@ def display_info(stdscr):
     if curses.can_change_color():
         display_info_line(stdscr, "The terminal should show a green gradient below. If it's colorful instead, curses can't change terminal color.")
         matrix.init_colors()
-        for i in range(matrix.NUMBER_OF_COLOR):
+        for i in range(matrix.NUMBER_OF_COLOR + 1):
             color_num = matrix.START_COLOR_NUM + i
             display_info_line(stdscr, "Pair {} {} {}".format(color_num, curses.color_content(color_num), curses.pair_content(color_num)), curses.color_pair(color_num))
 
