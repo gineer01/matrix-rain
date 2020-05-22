@@ -24,23 +24,23 @@ START_COLOR_NUM = 128  # The starting number for color in gradient to avoid chan
 HEAD_STANDOUT = curses.COLOR_WHITE | curses.A_STANDOUT  # look better for small font
 HEAD_BOLD = curses.COLOR_WHITE | curses.A_BOLD  # look better for larger font
 
-style = {
-    'head': HEAD_STANDOUT
+# TODO This can be a namedtuple
+options = {
+    'head': HEAD_STANDOUT,
+    'speed': FALLING_SPEED,
+    'count': MAX_RAIN_COUNT,
 }
 
 
-# Reset the config value according to screen size
+# Reset the options value according to screen size
 def config(stdscr):
     curses.curs_set(0)
     stdscr.nodelay(True)
 
     init_colors()
 
-    global MAX_RAIN_COUNT
-    MAX_RAIN_COUNT = curses.COLS//2
-
-    global FALLING_SPEED
-    FALLING_SPEED = 1 + curses.LINES//25
+    options['count'] = curses.COLS//2
+    options['speed'] = 1 + curses.LINES//25
 
 
 def init_colors():
@@ -82,7 +82,7 @@ def rain(stdscr, pool):
         x = random.choice(pool)
         pool.remove(x)
         max_length = random_rain_length()
-        speed = random.randint(1, FALLING_SPEED)
+        speed = random.randint(1, options['speed'])
         yield from animate_rain(stdscr, x, max_length, speed)
         pool.append(x)
 
@@ -123,7 +123,7 @@ def animate_rain(stdscr, x, max_length, speed=FALLING_SPEED):
 
 def show_head(stdscr, head, x):
     if head < curses.LINES:
-        stdscr.addstr(head, x, random_char(), style['head'])
+        stdscr.addstr(head, x, random_char(), options['head'])
 
 
 def show_body(stdscr, head, middle, tail, x):
@@ -154,12 +154,12 @@ def update_style():
     Cycle thru different styles
     :return: None
     '''
-    style['head'] =  HEAD_BOLD if style['head'] == HEAD_STANDOUT else HEAD_STANDOUT
+    options['head'] =  HEAD_BOLD if options['head'] == HEAD_STANDOUT else HEAD_STANDOUT
 
 
 def main(stdscr):
     stdscr.addstr(0, 0, "Press any key to start. Press any key (except SPACE) to stop.")
-    stdscr.addstr(1, 0, "Press key 's' to try different styles.")
+    stdscr.addstr(1, 0, "Press key 'h' to try a different style.")
     stdscr.addstr(curses.LINES//3, curses.COLS//4, "T H E   M A T R I X")
     ch = stdscr.getch()  # Wait for user to press something before starting
     config(stdscr)
@@ -175,7 +175,7 @@ def main(stdscr):
 
         ch = stdscr.getch()
         if ch != curses.ERR and ch != ord(' '):  # Use space to proceed animation if nodelay is False
-            if ch == ord('s'):
+            if ch == ord('h'):
                 update_style()
             else:
                 break  # exit
@@ -184,7 +184,7 @@ def main(stdscr):
 
 
 def add_rain(rains, stdscr, pool):
-    if (len(rains) < MAX_RAIN_COUNT) and (len(pool) > 0):
+    if (len(rains) < options['count']) and (len(pool) > 0):
         rains.append(rain(stdscr, pool))
 
 
